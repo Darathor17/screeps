@@ -80,10 +80,16 @@ module.exports = {
 
       //find all FIND_CONSTRUCTION_SITES
       var constructionSites = room.find(FIND_CONSTRUCTION_SITES);
+      var constructionSitesProgress = 0;
+      var constructionSitesProgressTotal = 0;
       for (var i in constructionSites) {
         room.visual.text(constructionSites[i].progress+"/"+constructionSites[i].progressTotal, constructionSites[i].pos.x,constructionSites[i].pos.y, {color: 'white', font:  0.25, align:'center'});
+        constructionSitesProgress += constructionSites[i].progress
+        constructionSitesProgressTotal += constructionSites[i].progressTotal;
       }
-
+      room.memory.constructionSites = {};
+      room.memory.constructionSites.progress = constructionSitesProgress;
+      room.memory.constructionSites.progressTotal = constructionSitesProgressTotal;
       /* TO DO
       * add towers
       * add spawns

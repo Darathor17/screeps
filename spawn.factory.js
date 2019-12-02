@@ -24,7 +24,6 @@ var spawnFactory = {
     var miners = _.sum(Game.creeps, (creep) => creep.memory.role == 'miner' && creep.memory.madeIn == roomName);
     var haulers = _.sum(Game.creeps, (creep) => creep.memory.role == 'hauler' && creep.memory.madeIn == roomName);
     var defenders = _.sum(creepsInRoom, (creep) => creep.memory.role == 'defender');
-    var constructionSites = spawn.room.find(FIND_CONSTRUCTION_SITES);
 
     //init other variables
     var sources = spawn.room.find(FIND_SOURCES);
@@ -33,12 +32,20 @@ var spawnFactory = {
     var energyOfRoom = spawn.room.energyAvailable;
     var minerals = spawn.room.find(FIND_MINERALS);
     var mineral = minerals[0];
+    var constructionSites = spawn.room.find(FIND_CONSTRUCTION_SITES);
+    var constructionSitesProgress
+    var constructionSitesProgressTotal
+    for (var s in constructionSites) {
+    constructionSitesProgress += constructionSites[s].progress
+    constructionSitesProgressTotal += constructionSites[s].progressTotal
+    }
+    var constructionSitesProgressRemaining = constructionSitesProgressTotal - constructionSitesProgress
+
     // Init number of creeps per room
     var minHarvesters = 0;
     var minMiners = 0;
     var minHaulers = 0;
     var minUpgraders = 0;
-    var minBuilders = 0;
     var minRepairers = 0;
     var minScouts = 0;
     var minClaimers = 0;
@@ -46,6 +53,10 @@ var spawnFactory = {
     var minDefenders = 0;
     var minHarvesterExtractors = 0;
 
+    // init memomy
+    spawn.room.memory.factory = {};
+    spawn.room.memory.factory.target = {};
+    spawn.room.memory.factory.target.builders = 0;
 
 //###################### VISUAL ######################
 spawn.room.visual.text(spawn.energy+'/'+spawn.energyCapacity, spawn.pos.x,spawn.pos.y+1, {color: 'white', font:  0.5, align:'center'});
@@ -65,7 +76,7 @@ if (spawn.spawning) {
 //###################### ROOM LEVEL 2 ######################
     if (roomLevel == 2) {
       minMiners = numberOfSources;
-      minHaulers = numberOfSources;
+      minHaulers = numberOfSources*2;
       minUpgraders = numberOfSources;
       minRepairers = 0;
      if (spawn.room.memory.defcon < 5) {
@@ -76,7 +87,7 @@ if (spawn.spawning) {
 //###################### ROOM LEVEL 3 ######################
     if (roomLevel == 3) {
       minMiners = numberOfSources;
-      minHaulers = numberOfSources+1;
+      minHaulers = numberOfSources*2;
       minUpgraders = numberOfSources+1;
       minClaimers = 0;
       minBuilders = 0;
@@ -147,13 +158,9 @@ if (spawn.spawning) {
 
 //###################### Routines ######################
     if (constructionSites.length >0) {
-       if (constructionSites.length > 10) {
-           minBuilders = 2;
-       } else {
-           minBuilders = 2;
-       }
+      spawn.room.memory.factory.target.builders = Math.min((Math.ceil(spawn.room.memory.constructionSites.progressTotal / 3000)),6);
     } else if (builders >0) {
-       minBuilders = 0;
+       spawn.room.memory.factory.target.builders = 0;
     }
 
     if (spawn.room.controller.ticksToDowngrade < 1500 && minUpgraders < 1) {
@@ -167,14 +174,14 @@ if (spawn.spawning) {
     }
 
    //repairer (when no tower)
-   if (roomLevel < 3) {
+   if (roomLevel < 4) {
 
      var repairTargets = spawn.room.find(FIND_STRUCTURES, {
        filter: function(structure){
          if (structure.structureType == STRUCTURE_ROAD) {
            return (structure.hits < structure.hitsMax/100*15)
          }else if (structure.structureType == STRUCTURE_WALL) {
-           return (structure.hits < 30000)
+           return (structure.hits < structure.hitsMax/100*1)
          }else{
            return (structure.hits < structure.hitsMax/100*75)
          }
@@ -187,7 +194,7 @@ if (spawn.spawning) {
   }
 
 
-  //repairer (when no tower)
+  //claimer
   if (Game.flags.claim1) {
       minClaimers = 1;
     }
@@ -225,7 +232,7 @@ if (spawn.spawning) {
           var newName = spawn.createUpgrader(energyOfRoom,'upgrader',spawn.room.name);
           console.log('Spawning new upgrader: ' + newName);
         }
-        else if(builders < minBuilders) {
+        else if(builders < spawn.room.memory.factory.target.builders) {
           var newName = spawn.createStandard(energyOfRoom,'builder',spawn.room.name);
         }
         else if(repairers < minRepairers) {

@@ -58,38 +58,49 @@ module.exports.loop = function () {
                var upgraders = _.sum(creepsInRoom, (creep) => creep.memory.role == 'upgrader');
                var miners = _.sum(creepsInRoom, (creep) => creep.memory.role == 'miner');
 
-               var resourcesDropped = Game.rooms[r].find(FIND_DROPPED_RESOURCES);
+               var droppedRessources = Game.rooms[r].find(FIND_DROPPED_RESOURCES);
                var resourcesInRoom = 0;
                var containersMiningAmount = 0;
+               var containersMiningAmountMax = 0;
                var containersStorageAmount = 0;
-               for (var l in resourcesDropped) {
-                   resourcesInRoom = resourcesInRoom + resourcesDropped[l].amount;
+               var containersStorageAmountMax = 0;
+
+
+               for (var l in droppedRessources) {
+                   resourcesInRoom = resourcesInRoom + droppedRessources[l].amount;
                }
               var containersMining = Game.rooms[r].find(FIND_STRUCTURES, { filter: (s) => (s.structureType == STRUCTURE_CONTAINER && s.memory.role == 'mining')});
               for (j in containersMining) {
-                  containersMiningAmount = containersMiningAmount + containersMining[j].store[RESOURCE_ENERGY];
+                  containersMiningAmount += containersMining[j].store[RESOURCE_ENERGY];
+                  containersMiningAmountMax += containersMining[j].store.getCapacity();
               }
               var containersStorage = Game.rooms[r].find(FIND_STRUCTURES, { filter: (s) => (s.structureType == STRUCTURE_CONTAINER && s.memory.role == 'storage')});
               for (i in containersStorage) {
-                  containersStorageAmount = containersStorageAmount + containersStorage[i].store[RESOURCE_ENERGY];
+                  containersStorageAmount += containersStorage[i].store[RESOURCE_ENERGY];
+                  containersStorageAmountMax += containersStorage[i].store.getCapacity();
               }
+
+              var constructionSites =  Game.rooms[r].find(FIND_MY_CONSTRUCTION_SITES);
+
+
 
 
                Game.rooms[r].visual.text('Energy: '+Game.rooms[r].energyAvailable+'/'+Game.rooms[r].energyCapacityAvailable, 0, 1, {align: 'left', font: 0.6});
-               Game.rooms[r].visual.text('Resources dropped: '+resourcesInRoom, 0, 5, {align: 'left', font: 0.6});
-               Game.rooms[r].visual.text('Containers Mining: '+containersMiningAmount, 0, 4, {align: 'left', font: 0.6});
-               Game.rooms[r].visual.text('Containers Storage: '+containersStorageAmount, 0, 3, {align: 'left', font: 0.6});
+               Game.rooms[r].visual.text('Dropped Ressources: '+resourcesInRoom, 0, 5, {align: 'left', font: 0.6});
+               Game.rooms[r].visual.text('Container - Mining: '+misc.shortenLargeNumber(containersMiningAmount,1)+'/'+misc.shortenLargeNumber(containersMiningAmountMax,1), 0, 4, {align: 'left', font: 0.6});
+               Game.rooms[r].visual.text('Container - Storage: '+misc.shortenLargeNumber(containersStorageAmount,1)+'/'+misc.shortenLargeNumber(containersStorageAmountMax,1), 0, 3, {align: 'left', font: 0.6});
                if (Game.rooms[r].storage) {
                   Game.rooms[r].visual.text('Room Storage: '+_.sum(Game.rooms[r].storage.store), 0, 2, {align: 'left', font: 0.6});
                } else {
                   Game.rooms[r].visual.text('Room Storage: Not build', 0, 2, {align: 'left', font: 0.6});
                }
+               Game.rooms[r].visual.text('Constructions: '+constructionSites.length+' ('+misc.shortenLargeNumber(Game.rooms[r].memory.constructionSites.progress,1)+'/'+misc.shortenLargeNumber(Game.rooms[r].memory.constructionSites.progressTotal,1)+')', 0, 6, {align: 'left', font: 0.6});
 
                Game.rooms[r].visual.text('Creeps: '+creepsInRoom.length, 45, 1, {align: 'left', font: 0.5});
                Game.rooms[r].visual.text('Miners: '+miners, 45, 2, {align: 'left', font: 0.5});
                Game.rooms[r].visual.text('Haulers: '+haulers, 45, 3, {align: 'left', font: 0.5});
                Game.rooms[r].visual.text('Upgraders: '+upgraders, 45, 4, {align: 'left', font: 0.5});
-               Game.rooms[r].visual.text('Builders: '+builders, 45, 5, {align: 'left', font: 0.5});
+               Game.rooms[r].visual.text('Builders: '+builders+'/'+Game.rooms[r].memory.factory.target.builders, 45, 5, {align: 'left', font: 0.5});
            }
         }
   } catch (error) {
