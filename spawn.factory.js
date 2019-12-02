@@ -8,8 +8,7 @@ var spawnFactory = {
 
     var roomLevel = spawn.room.controller.level;
     var roomName = spawn.room.name;
-    //var defcon = spawn.room.memory.defcon.level;
-    var defcon = 1;
+    var defcon = spawn.room.memory.defcon.level;
     //init variables containing numbers of creeps per roles
     var creepsInRoom = spawn.room.find(FIND_MY_CREEPS);
     var harvesters = _.sum(Game.creeps, (creep) => creep.memory.role == 'harvester' && creep.memory.madeIn == roomName);
@@ -79,9 +78,6 @@ if (spawn.spawning) {
       minHaulers = numberOfSources*2;
       minUpgraders = numberOfSources;
       minRepairers = 0;
-     if (spawn.room.memory.defcon < 5) {
-      minDefenders = 1;
-      }
     }
 
 //###################### ROOM LEVEL 3 ######################
@@ -169,8 +165,10 @@ if (spawn.spawning) {
 
     if (defcon === 3) {
       minDefenders = 2;
-    } else if (defcon === 2) {
-      minDefenders = 4;
+    } else if (defcon < 3) {
+      minDefenders = 10;
+    } else if (defcon > 3) {
+      minDefenders = 0;
     }
 
    //repairer (when no tower)

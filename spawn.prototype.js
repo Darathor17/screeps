@@ -111,28 +111,27 @@ module.exports = function() {
           }
       };
 
-        // create a new template of short range warrior [TOUGHx2, MOVEx1, ATTACKx1, HEALx1] = 100+600+400+250=1350
+        // create a new template of short range warrior 
+        // if energy is at least 130 [MOVEx1, ATTACKx1] : Most Basic warrior
+        // if energy is above 190 [MOVEx2, ATTACKx1, TOUGHx1] : intermediate
         StructureSpawn.prototype.createWarrior=
           function(energy, roleName, roomName, opt) {
             // create a balanced body as big as possible with the given energy
             var body = [];
-            var numberOfParts = Math.min(Math.floor(energy / 200),5); //max is 1000 energy here + 350 below for health
+            if (130 < energy && energy < 190) {
+                body.push(MOVE);
+                body.push(ATTACK);
+            } else if (energy >= 190) {
+                var numberOfParts = Math.min(Math.floor(energy / 190),5); // max energy is 950
 
-            for (let i = 0; i < numberOfParts; i++) {
-              body.push(TOUGH);
+                for (let i = 0; i < numberOfParts; i++) {
+                    body.push(TOUGH);
+                    body.push(MOVE);
+                    body.push(ATTACK);
+                    body.push(MOVE);
+                }
             }
-            for (let i = 0; i < numberOfParts; i++) {
-              body.push(ATTACK);
-            }
-            for (let i = 0; i < numberOfParts; i++) {
-              body.push(MOVE);
-            }
-
-            if ((energy-numberOfParts*200-350)>0 && opt) {
-              body.push(MOVE);
-              body.push(HEAL);
-            }
-
+ 
             // create creep with the created body and the given role
             var creepName = roleName+Game.time.toString();
             var canCreate = this.spawnCreep(body,creepName,{ dryRun: true });
@@ -155,7 +154,7 @@ module.exports = function() {
 
 /*
 
-MOVE: "move",
+    MOVE: "move",
     WORK: "work",
     CARRY: "carry",
     ATTACK: "attack",
