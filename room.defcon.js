@@ -33,7 +33,7 @@ module.exports = {
     var ruins = room.find(FIND_RUINS);
     var defenses = room.find(FIND_STRUCTURES, {
       filter: function(structure) {
-        if (structure.structureType == STRUCTURE_WALL || structureType == STRUCTURE_RAMPART) {
+        if (structure.structureType == STRUCTURE_WALL || structure.structureType == STRUCTURE_RAMPART) {
           return structure
         }
       }
